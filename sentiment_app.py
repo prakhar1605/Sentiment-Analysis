@@ -1,34 +1,33 @@
 import streamlit as st
 import joblib
-import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
+import nltk
 
+# Download NLTK data
 nltk.download('punkt')
 nltk.download('stopwords')
 
-# Load saved model and vectorizer
+# Load model and vectorizer
 model = joblib.load('sentiment_model.pkl')
 vectorizer = joblib.load('tfidf_vectorizer.pkl')
 
-# Preprocess user input
-def preprocess(text):
+# Simple preprocessing
+def clean_text(text):
     text = text.lower()
-    tokens = word_tokenize(text)
-    tokens = [w for w in tokens if w.isalpha() and w not in stopwords.words('english')]
-    return " ".join(tokens)
+    words = word_tokenize(text)
+    words = [w for w in words if w.isalpha() and w not in stopwords.words('english')]
+    return " ".join(words)
 
-# UI
-st.title("🧠 Social Media Sentiment Analyzer")
-st.write("Built with Scikit-learn and Streamlit")
+# App interface
+st.title("Sentiment Analysis App")
+user_input = st.text_area("Enter your text here:")
 
-user_input = st.text_area("✍️ Enter a post, tweet or comment:")
-
-if st.button("🔍 Analyze Sentiment"):
-    if user_input.strip():
-        clean = preprocess(user_input)
-        vect = vectorizer.transform([clean])
-        pred = model.predict(vect)[0]
-        st.success(f"**Predicted Sentiment: {pred.upper()}**")
+if st.button("Analyze"):
+    if user_input:
+        cleaned = clean_text(user_input)
+        features = vectorizer.transform([cleaned])
+        prediction = model.predict(features)[0]
+        st.success(f"Result: {prediction.upper()}")
     else:
-        st.warning("⚠️ Please enter some text to analyze.")
+        st.warning("Please enter some text")
