@@ -1,44 +1,34 @@
 import pandas as pd
-import joblib
-import nltk
-from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score
+import joblib
+import nltk
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
 
-nltk.download('stopwords')
+# Download NLTK data
 nltk.download('punkt')
+nltk.download('stopwords')
 
 # Load data
-df = pd.read_csv('social_media_data.csv')
+data = pd.read_csv('social_media_data.csv')
 
-# Preprocess function
-def preprocess(text):
+# Clean text
+def clean_text(text):
     text = text.lower()
-    tokens = word_tokenize(text)
-    tokens = [w for w in tokens if w.isalpha() and w not in stopwords.words('english')]
-    return " ".join(tokens)
+    words = nltk.word_tokenize(text)
+    words = [w for w in words if w.isalpha() and w not in stopwords.words('english')]
+    return " ".join(words)
 
-df['clean_text'] = df['text'].apply(preprocess)
+data['clean_text'] = data['text'].apply(clean_text)
 
-# Vectorize
+# Vectorize and train
 vectorizer = TfidfVectorizer()
-X = vectorizer.fit_transform(df['clean_text'])
-y = df['sentiment']
+X = vectorizer.fit_transform(data['clean_text'])
+y = data['sentiment']
 
-# Train/test split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Train model
 model = MultinomialNB()
-model.fit(X_train, y_train)
+model.fit(X, y)
 
-# Evaluate
-y_pred = model.predict(X_test)
-print("Accuracy:", accuracy_score(y_test, y_pred))
-
-# Save model and vectorizer
+# Save model
 joblib.dump(model, 'sentiment_model.pkl')
 joblib.dump(vectorizer, 'tfidf_vectorizer.pkl')
